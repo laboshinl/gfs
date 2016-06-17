@@ -4,6 +4,7 @@
  */
 package ru.laboshinl.gfs.server.chunkserver;
 
+import ru.laboshinl.gfs.DFS;
 import ru.laboshinl.gfs.protocol.Chunk;
 import ru.laboshinl.gfs.server.protocol.ChunkServerProtocol;
 import ru.laboshinl.gfs.server.protocol.MasterProtocol;
@@ -30,7 +31,7 @@ public class ChunkServer extends UnicastRemoteObject implements ChunkServerProto
     Map<Long, String> chunkHash;
     MasterProtocol master;
     ChunkServerProtocol server;
-    String path = "data/chunkserver/";
+    String path = ChunkServer.class.getClass().getResource("/data/chunkserver/").getPath();
 
     public ChunkServer() throws Exception {
         serverIP = IPaddr.getIP();
@@ -49,6 +50,16 @@ public class ChunkServer extends UnicastRemoteObject implements ChunkServerProto
         chunkHash = new ConcurrentHashMap();
         master = (MasterProtocol) Naming.lookup("rmi://" + socket + ":9500/master");
         master.addServer(serverIP);
+        Chkcheck chkcheck = new Chkcheck();
+    }
+    
+    public ChunkServer(String socket, String dir) throws Exception {
+        serverIP = IPaddr.getIP();
+        chunks = new ArrayList();
+        chunkHash = new ConcurrentHashMap();
+        master = (MasterProtocol) Naming.lookup("rmi://" + socket + ":9500/master");
+        master.addServer(serverIP);
+        path = ChunkServer.class.getClass().getResource(dir).getPath();
         Chkcheck chkcheck = new Chkcheck();
     }
 
@@ -91,6 +102,9 @@ public class ChunkServer extends UnicastRemoteObject implements ChunkServerProto
     public synchronized String saveFile(Chunk chk, byte[] data) throws Exception {
         String fileName = chk.getChunkName();
         File file = new File(path + fileName);
+        //System.out.println(ChunkServer.class.getClass().getResource(path).getPath());
+        //File file = new File(ChunkServer.class.getClass().getResource(path).getPath()+fileName);
+        
         OutputStream output = new FileOutputStream(file, true);
         output.write(data);
         output.close();
@@ -101,6 +115,7 @@ public class ChunkServer extends UnicastRemoteObject implements ChunkServerProto
 
     public void removeFile(Chunk chk) throws Exception {
         String fileName = chk.getChunkName();
+        //File file = new File(ChunkServer.class.getClass().getResource(path).getPath()+fileName);
         File file = new File(path + fileName);
         file.delete();
     }
@@ -115,6 +130,7 @@ public class ChunkServer extends UnicastRemoteObject implements ChunkServerProto
         byte[] upbytes = new byte[length];
 
         InputStream input = new FileInputStream(path + fileName);
+        //InputStream input = ChunkServer.class.getClass().getResourceAsStream(path + fileName);
         while ((n = input.read(buffer, 0, length)) > 0) {
             System.arraycopy(buffer, 0, upbytes, len, n);
             len += n;

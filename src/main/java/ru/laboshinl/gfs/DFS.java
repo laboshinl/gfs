@@ -25,12 +25,18 @@ public class DFS {
     private final static int defSize = 1024 * 1024 * 7;
     private MasterProtocol master;
     private ChunkServerProtocol server;
-    private String path = "data/client/";
+    private String path = DFS.class.getClass().getResource("/data/client/").getPath();
 
     // 初始化远程对象
     public DFS(String socket) throws Exception {
         master = (MasterProtocol) Naming.lookup("rmi://" + socket + "/master");
         server = null;
+    }
+    
+    public DFS(String socket, String dir) throws Exception {
+        master = (MasterProtocol) Naming.lookup("rmi://" + socket + "/master");
+        server = null;
+        path = DFS.class.getClass().getResource(dir).getPath();
     }
 
     // 上传文件
@@ -42,8 +48,8 @@ public class DFS {
         int n, seq = 0;
         byte[] buffer = new byte[defSize];
 
-        //InputStream input = new FileInputStream(path + fileName);
-        InputStream input = DFS.class.getClass().getResourceAsStream(path + fileName);
+        InputStream input = new FileInputStream(path + fileName);
+        //InputStream input = DFS.class.getClass().getResourceAsStream(path + fileName);
         input.skip(0);
         while ((n = input.read(buffer, 0, defSize)) > 0) {
             byte[] upbytes = new byte[n];
